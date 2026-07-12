@@ -1,0 +1,191 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+from google.colab.patches import cv2_imshow
+from google.colab import drive
+import os
+
+# Mount Google Drive
+drive.mount('/content/drive')
+
+# --- Konfigurasi Path ---
+INPUT_FOLDER = '/content/drive/MyDrive/Colab Notebooks/volcano_victim_dataset/original/val/images'
+OUTPUT_BASE_FOLDER = '/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered'
+
+# Pastikan folder output utama ada
+if not os.path.exists(OUTPUT_BASE_FOLDER):
+    os.makedirs(OUTPUT_BASE_FOLDER)
+    print(f"Folder output utama '{OUTPUT_BASE_FOLDER}' berhasil dibuat.")
+
+def edge_detection_with_performance(img):
+    """
+    Menerapkan berbagai metode edge detection pada gambar yang sudah dibaca dan
+    mengukur waktu pemrosesannya.
+
+    Args:
+        img (numpy.ndarray): Gambar dalam format grayscale.
+
+    Returns:
+        dict: Dictionary yang berisi gambar hasil edge detection dan waktu pemrosesan
+              untuk setiap metode.
+    """
+    if img is None:
+        print(f"Error: Gambar tidak valid.")
+        return None
+
+    edges_with_time = {}
+
+    # 1. Metode Canny
+    start_time = time.time()
+    canny_edges = cv2.Canny(img, 100, 200) # Threshold bawah dan atas dapat disesuaikan
+    end_time = time.time()
+    processing_time_canny = end_time - start_time
+    edges_with_time['Canny'] = {'image': canny_edges, 'time': processing_time_canny}
+
+    # 2. Metode Sobel
+    start_time = time.time()
+    sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=5)
+    sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=5)
+    sobel_combined = cv2.addWeighted(cv2.convertScaleAbs(sobelx), 0.5, cv2.convertScaleAbs(sobely), 0.5, 0)
+    end_time = time.time()
+    processing_time_sobel = end_time - start_time
+    edges_with_time['Sobel'] = {
+        'X': {'image': cv2.convertScaleAbs(sobelx), 'time': processing_time_sobel / 3}, # Estimasi waktu
+        'Y': {'image': cv2.convertScaleAbs(sobely), 'time': processing_time_sobel / 3}, # Estimasi waktu
+        'Combined': {'image': sobel_combined, 'time': processing_time_sobel}
+    }
+
+    # 3. Metode Laplacian
+    start_time = time.time()
+    laplacian_edges = cv2.Laplacian(img, cv2.CV_64F, ksize=5)
+    end_time = time.time()
+    processing_time_laplacian = end_time - start_time
+    edges_with_time['Laplacian'] = {'image': cv2.convertScaleAbs(laplacian_edges), 'time': processing_time_laplacian}
+
+    # 4. Metode Prewitt
+    start_time = time.time()
+    kernelx_prewitt = np.array([[1, 1, 1],
+                                [0, 0, 0],
+                                [-1, -1, -1]])
+    kernely_prewitt = np.array([[-1, 0, 1],
+                                [-1, 0, 1],
+                                [-1, 0, 1]])
+    prewittx = cv2.filter2D(img, -1, kernelx_prewitt)
+    prewitty = cv2.filter2D(img, -1, kernely_prewitt)
+    prewitt_combined = cv2.addWeighted(prewittx, 0.5, prewitty, 0.5, 0)
+    end_time = time.time()
+    processing_time_prewitt = end_time - start_time
+    edges_with_time['Prewitt'] = {
+        'X': {'image': prewittx, 'time': processing_time_prewitt / 3}, # Estimasi waktu
+        'Y': {'image': prewitty, 'time': processing_time_prewitt / 3}, # Estimasi waktu
+        'Combined': {'image': prewitt_combined, 'time': processing_time_prewitt}
+    }
+
+    # 5. Metode Roberts
+    start_time = time.time()
+    kernelx_roberts = np.array([[1, 0],
+                                [0, -1]])
+    kernely_roberts = np.array([[0, 1],
+                                [-1, 0]])
+    robertsx = cv2.filter2D(img, -1, kernelx_roberts)
+    robertsy = cv2.filter2D(img, -1, kernely_roberts)
+    roberts_combined = cv2.addWeighted(cv2.convertScaleAbs(robertsx), 0.5, cv2.convertScaleAbs(robertsy), 0.5, 0)
+    end_time = time.time()
+    processing_time_roberts = end_time - start_time
+    edges_with_time['Roberts'] = {
+        'X': {'image': cv2.convertScaleAbs(robertsx), 'time': processing_time_roberts / 3}, # Estimasi waktu
+        'Y': {'image': cv2.convertScaleAbs(robertsy), 'time': processing_time_roberts / 3}, # Estimasi waktu
+        'Combined': {'image': roberts_combined, 'time': processing_time_roberts}
+    }
+
+    # 6. Metode Scharr
+    start_time = time.time()
+    scharrx = cv2.Scharr(img, cv2.CV_64F, 1, 0)
+    scharry = cv2.Scharr(img, cv2.CV_64F, 0, 1)
+    scharr_combined = cv2.addWeighted(cv2.convertScaleAbs(scharrx), 0.5, cv2.convertScaleAbs(scharry), 0.5, 0)
+    end_time = time.time()
+    processing_time_scharr = end_time - start_time
+    edges_with_time['Scharr'] = {
+        'X': {'image': cv2.convertScaleAbs(scharrx), 'time': processing_time_scharr / 3}, # Estimasi waktu
+        'Y': {'image': cv2.convertScaleAbs(scharry), 'time': processing_time_scharr / 3}, # Estimasi waktu
+        'Combined': {'image': scharr_combined, 'time': processing_time_scharr}
+    }
+
+    return edges_with_time
+
+def process_images_from_folder_with_performance(input_folder, output_base_folder):
+    """
+    Memproses semua file gambar dalam folder input, kemudian edge detection
+    dengan pengukuran waktu, dan menyimpan hasilnya ke folder output yang
+    dibedakan per metode. Selain itu, mencetak hasil performa waktu pemrosesan.
+
+    Args:
+        input_folder (str): Path ke folder input di Google Drive.
+        output_base_folder (str): Path ke folder output utama di Google Drive.
+    """
+    image_files = [f for f in os.listdir(input_folder) if f.endswith(('.jpg', '.jpeg', '.png'))]
+    print(f"Ditemukan {len(image_files)} file gambar di folder: {input_folder}")
+
+    all_performance_data = {}
+
+    for filename in image_files:
+        input_path = os.path.join(input_folder, filename)
+        img = cv2.imread(input_path, cv2.IMREAD_GRAYSCALE)
+
+        if img is not None:
+            # Lakukan deteksi tepi pada gambar asli dan ukur waktu
+            edges_with_time = edge_detection_with_performance(img)
+            if edges_with_time:
+                base_name, ext = os.path.splitext(filename)
+                all_performance_data[filename] = {}
+                for method, output_data in edges_with_time.items():
+                    if method in ['Roberts', 'Scharr']:
+                        for sub_method, sub_output_data in output_data.items():
+                            method_folder = os.path.join(output_base_folder, f"{method} {sub_method}", 'val', 'images')
+                            if not os.path.exists(method_folder):
+                                os.makedirs(method_folder)
+                                print(f"Folder output '{method_folder}' berhasil dibuat.")
+                            output_filename = f"{base_name}{ext}"
+                            output_path = os.path.join(method_folder, output_filename)
+                            cv2.imwrite(output_path, sub_output_data['image'])
+                            print(f"Berhasil menyimpan hasil edge detection ({method} {sub_method}) untuk gambar {filename} ke {output_path} (Waktu: {sub_output_data['time']:.4f} detik)")
+                            if filename not in all_performance_data:
+                                all_performance_data[filename] = {}
+                            if method not in all_performance_data[filename]:
+                                all_performance_data[filename][method] = {}
+                            all_performance_data[filename][method][sub_method] = sub_output_data['time']
+                    else:
+                        method_folder = os.path.join(output_base_folder, method, 'val', 'images')
+                        if not os.path.exists(method_folder):
+                            os.makedirs(method_folder)
+                            print(f"Folder output '{method_folder}' berhasil dibuat.")
+                        if isinstance(output_data, dict) and 'image' in output_data and 'time' in output_data:
+                            output_filename = f"{base_name}{ext}"
+                            output_path = os.path.join(method_folder, output_filename)
+                            cv2.imwrite(output_path, output_data['image'])
+                            print(f"Berhasil menyimpan hasil edge detection ({method}) untuk gambar {filename} ke {output_path} (Waktu: {output_data['time']:.4f} detik)")
+                            all_performance_data[filename][method] = output_data['time']
+                        elif isinstance(output_data, dict):
+                            all_performance_data[filename][method] = {}
+                            for sub_method, sub_output_data in output_data.items():
+                                output_filename = f"{base_name}_{sub_method}{ext}"
+                                output_path = os.path.join(method_folder, output_filename)
+                                cv2.imwrite(output_path, sub_output_data['image'])
+                                print(f"Berhasil menyimpan hasil edge detection ({method} - {sub_method}) untuk gambar {filename} ke {output_path} (Waktu: {sub_output_data['time']:.4f} detik)")
+                                all_performance_data[filename][method][sub_method] = sub_output_data['time']
+        else:
+            print(f"Gagal membaca file: {input_path}")
+
+    print("\n--- Ringkasan Performa Waktu Pemrosesan ---")
+    for filename, method_data in all_performance_data.items():
+        print(f"File: {filename}")
+        for method, time_data in method_data.items():
+            if isinstance(time_data, dict):
+                for sub_method, processing_time in time_data.items():
+                    print(f"  {method} - {sub_method}: {processing_time:.4f} detik")
+            else:
+                print(f"  {method}: {time_data:.4f} detik")
+
+if __name__ == "__main__":
+    process_images_from_folder_with_performance(INPUT_FOLDER, OUTPUT_BASE_FOLDER)
