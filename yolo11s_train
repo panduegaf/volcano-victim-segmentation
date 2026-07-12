@@ -1,0 +1,14 @@
+!pip install ultralytics
+from ultralytics import YOLO
+
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Prewitt X/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Prewitt Y/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Roberts Combined/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Roberts X/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Roberts Y/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Scharr Combined/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Scharr X/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Scharr Y/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Sobel Combined/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Sobel X/data.yaml" epochs=100 imgsz=640 iou=0.5
+!yolo detect train model=yolo11s.pt data="/content/drive/My Drive/Colab Notebooks/volcano_victim_dataset/filtered/Sobel Y/data.yaml" epochs=100 imgsz=640 iou=0.5
