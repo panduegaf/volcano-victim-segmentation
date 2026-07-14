@@ -1,6 +1,6 @@
-train: ../train/images
+train: ../images
 val: ../val/images
 test: ../test/images
 
 nc: 2
-names: ['Korban', 'BukanKorban']
+names: ['Victim', 'NonVictim']
